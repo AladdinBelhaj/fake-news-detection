@@ -31,16 +31,7 @@ def run_fake_news_detection(tweet_id):
     The actual implementation will involve calling a Python script with subprocess.
     """
     try:
-        # In a real implementation, this would call the user's AI model script
-        # Example: result = subprocess.check_output(['python', 'fake_news_model.py', tweet_id], text=True).strip()
-        
-        # For demonstration purposes, we'll return a dummy result
-        # In production, replace this with the actual script call
-        # Uncomment the line below and replace with the actual script path
-        # result = subprocess.check_output(['python', 'path/to/fake_news_model.py', tweet_id], text=True).strip()
-        
-        # Dummy implementation (replace with actual script call)
-        # For demo, we'll consider even-numbered IDs as fake news and odd-numbered as real
+        # Placeholder for actual implementation
         result = '1' if int(tweet_id) % 2 == 0 else '0'
         return result
     
