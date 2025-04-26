@@ -25,16 +25,19 @@ def extract_tweet_id(url):
 def run_fake_news_detection(tweet_id):
     """
     Run the fake news detection script with the tweet ID as an argument.
-    This function should call the AI model script that will be implemented by the user.
-    
-    For now, this is a placeholder that returns a dummy result.
-    The actual implementation will involve calling a Python script with subprocess.
+    Calls the AI model script for prediction.
     """
     try:
-        # Placeholder for actual implementation
-        result = '1' if int(tweet_id) % 2 == 0 else '0'
-        return result
-    
+        result = subprocess.run([
+            'python',
+            os.path.join(os.path.dirname(__file__), 'gcn_predict.py'),
+            str(tweet_id)
+        ], capture_output=True, text=True)
+        output = result.stdout.strip()
+        if output in ['0', '1']:
+            return output
+        else:
+            return None
     except Exception as e:
         print(f"Error running fake news detection: {e}")
         return None
