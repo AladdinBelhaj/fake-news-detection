@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import re
 import subprocess
+from .models import TweetPrediction
 
 def extract_tweet_id(url):
     """
@@ -53,7 +54,14 @@ def index(request):
         tweet_id = extract_tweet_id(twitter_url)
         
         if tweet_id:
-            result = run_fake_news_detection(tweet_id)
+            # Check if prediction exists in DB
+            try:
+                prediction_obj = TweetPrediction.objects.get(tweet_id=tweet_id)
+                result = prediction_obj.prediction
+            except TweetPrediction.DoesNotExist:
+                result = run_fake_news_detection(tweet_id)
+                if result in ['0', '1']:
+                    TweetPrediction.objects.create(tweet_id=tweet_id, prediction=result)
             context['result'] = result
             context['tweet_id'] = tweet_id
     
