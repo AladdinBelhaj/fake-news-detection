@@ -49,6 +49,9 @@ def train_and_save():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     dataset = load_data('train')
     val_dataset = load_data('val')
+    from torch_geometric.loader import DataLoader
+    train_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=32)
     args = {
         'num_features': dataset.num_features,
         'hidden_dim': 64,
@@ -61,21 +64,30 @@ def train_and_save():
     best_val_acc = 0
     for epoch in range(1, 21):
         model.train()
-        optimizer.zero_grad()
-        out = model(dataset.data.to(device))
-        loss = F.nll_loss(out, dataset.data.y)
-        loss.backward()
-        optimizer.step()
+        total_loss = 0
+        for batch in train_loader:
+            batch = batch.to(device)
+            optimizer.zero_grad()
+            out = model(batch)
+            loss = F.nll_loss(out, batch.y)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item() * batch.num_graphs
         # Validation
         model.eval()
+        correct = 0
+        total = 0
         with torch.no_grad():
-            val_out = model(val_dataset.data.to(device))
-            pred = val_out.argmax(dim=1)
-            correct = int((pred == val_dataset.data.y).sum())
-            val_acc = correct / val_dataset.data.y.size(0)
-            if val_acc > best_val_acc:
-                best_val_acc = val_acc
-                torch.save(model.state_dict(), os.path.join(os.path.dirname(__file__), 'gcn_model.pt'))
+            for batch in val_loader:
+                batch = batch.to(device)
+                val_out = model(batch)
+                pred = val_out.argmax(dim=1)
+                correct += int((pred == batch.y).sum())
+                total += batch.y.size(0)
+        val_acc = correct / total if total > 0 else 0
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            torch.save(model.state_dict(), os.path.join(os.path.dirname(__file__), 'gcn_model.pt'))
     print("Training complete. Best val acc:", best_val_acc)
 
 def predict(tweet_id):
